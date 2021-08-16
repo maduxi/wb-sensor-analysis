@@ -70,7 +70,6 @@ object ProfileGenerator {
       .withColumn("ac_current_rms", col("phase_info").getField("ac_current_rms"))
       .withColumn("ac_voltage_rms", col("phase_info").getField("ac_voltage_rms"))
       .drop("phase_info")
-    // id|charger_id|energy|start_time|  end_time|charger_timestamp|phase_id|temperature|ac_current_rms|ac_voltage_rms
   }
 
   private def aggregateData(exploded: DataFrame): DataFrame = {
