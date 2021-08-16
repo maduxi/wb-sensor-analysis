@@ -36,7 +36,7 @@ root
  |    |    |-- min_ac_current_rms: long (nullable = true)
  |    |    |-- min_ac_voltage_rms: long (nullable = true)
 
- The charge_profile has a map with each phase (1,2,3) as a key, and from it you can access all the values from that
+ The charge_profile has a map with each phase (1,2,3) as a key, and from it you can access all the values for that
  session on the arrays, or the avg, max, min values. For example, to get the minimum temperature of the second phase
  for a particular session:
 
@@ -52,7 +52,7 @@ root
 object ProfileGenerator {
 
   def getProfiles(session: DataFrame, status: DataFrame): DataFrame = {
-    // Remove unrequired columns early
+    // Remove non required columns early
     val shorterSession = session.drop("user_id", "total_cost")
     val shorterStatus = status.drop("server_timestamp", "id")
     val joined = joinSessionsAndStatus(shorterSession, shorterStatus)
