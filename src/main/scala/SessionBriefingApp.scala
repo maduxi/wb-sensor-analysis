@@ -16,14 +16,10 @@ object SessionBriefingApp {
     val status = spark.read.schema(StatusSchema).json(status_path)
 
     val profiles: DataFrame = ProfileGenerator.getProfiles(session, status)
-    profiles.cache()
-    profiles.show()
-    println(profiles.count())
+    println("Number of profiles:" + profiles.count())
 
     val changes: DataFrame = ChangesReport.bigChangesReport(profiles)
-    changes.cache()
-    changes.show()
-    println(changes.count())
+    println("Number of anomalies: " + changes.count())
 
     spark.stop()
   }
