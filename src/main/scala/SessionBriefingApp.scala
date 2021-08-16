@@ -6,10 +6,10 @@ import Schemas.{SessionSchema, StatusSchema}
 
 object SessionBriefingApp {
 
-  val sessions_path = "./Charger_logs/charger_log_session"
-  val status_path = "./Charger_logs/charger_log_status"
-
   def main(args: Array[String]) {
+    val sessions_path = args(0) // Something like: "/Users/madhavacarrillo/Documents/wb/Charger_logs/charger_log_session"
+    val status_path = args(1) // Something like: "/Users/madhavacarrillo/Documents/wb/Charger_logs/charger_log_status"
+
     // Leaving this as local so it can run without further configuration for test
     val spark = SparkSession.builder.appName("Simple Application")
       .config("spark.master", "local")
@@ -18,13 +18,14 @@ object SessionBriefingApp {
     val session = spark.read.schema(SessionSchema).json(sessions_path)
     val status = spark.read.schema(StatusSchema).json(status_path)
 
-
-    // Profiles has a
     val profiles: DataFrame = ProfileGenerator.getProfiles(session, status)
+    profiles.cache()
     profiles.show()
+    profiles.count()
 
     val changes: DataFrame = ChangesReport.bigChangesReport(profiles)
     changes.show()
+    changes.count()
 
     spark.stop()
   }

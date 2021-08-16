@@ -2,8 +2,12 @@ package wb.sensors
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{col, explode, lag, lit}
+import org.apache.spark.sql.functions.{abs, col, explode, lag, lit}
 
+/*
+Given a profiles DataFrame it will return a DataFrame with each time a value has a difference of more than 10%
+from the previous value
+ */
 object ChangesReport {
 
   def bigChangesReport(profile: DataFrame): DataFrame = {
@@ -13,9 +17,10 @@ object ChangesReport {
     val ac_current_rms = explodeVariable(phases,"ac_current_rms")
     val ac_voltage_rms = explodeVariable(phases,"ac_voltage_rms")
 
-    val temperatureAnomalies = getAnomalies(temperatures,10).withColumn("mesure",lit("temperature"))
-    val ac_current_rmsAnomalies = getAnomalies(ac_current_rms,10).withColumn("mesure",lit("ac_current_rms"))
-    val ac_voltage_rmsAnomalies = getAnomalies(ac_voltage_rms,10).withColumn("mesure",lit("ac_voltage_rms"))
+    val acceptable_margin = 10
+    val temperatureAnomalies = getAnomalies(temperatures,acceptable_margin).withColumn("measure",lit("temperature"))
+    val ac_current_rmsAnomalies = getAnomalies(ac_current_rms,acceptable_margin).withColumn("measure",lit("ac_current_rms"))
+    val ac_voltage_rmsAnomalies = getAnomalies(ac_voltage_rms,acceptable_margin).withColumn("measure",lit("ac_voltage_rms"))
 
     temperatureAnomalies.union(ac_current_rmsAnomalies).union(ac_voltage_rmsAnomalies)
   }
@@ -27,8 +32,8 @@ object ChangesReport {
 
   def getAnomalies(measures: DataFrame, margin: Double) = {
     val window = Window.partitionBy("id","phase_id").orderBy("sensor_time")
-    // After a null, we don't need to compare
+    // A null means is the first in the session
     val previousValue = measures.withColumn("previous_value",lag(col("var_value"), 1).over(window)).where(col("previous_value").isNotNull)
-    previousValue.withColumn("trigger",(col("previous_value")/col("var_value"))>margin).where(col("trigger"))
+    previousValue.withColumn("trigger", abs(col("previous_value")/col("var_value"))> margin).where(col("trigger")).drop("trigger")
   }
 }
